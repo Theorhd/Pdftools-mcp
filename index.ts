@@ -14,6 +14,7 @@ import { createWriteStream } from "fs";
 import * as path from "path";
 import * as os from "os";
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -154,6 +155,21 @@ const tools: Tool[] = [
       required: ["markdown_content", "output_filename"]
     }
   }
+    ,
+  {
+    name: "read_pdf",
+    description: "Read a PDF file from disk and return its text content",
+    inputSchema: {
+      type: "object",
+      properties: {
+        file_path: {
+          type: "string",
+          description: "Absolute or relative path to the PDF file"
+        }
+      },
+      required: ["file_path"]
+    }
+  }
 ];
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -197,6 +213,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
             {
               type: "text",
               text: `PDF successfully generated from HTML: ${outputPath}`
+            }
+          ]
+        };
+      }
+      
+      case "read_pdf": {
+        const { file_path } = args as any;
+
+        if (!file_path || typeof file_path !== 'string') {
+          throw new Error('file_path is required and must be a string');
+        }
+
+        const resolvedPath = path.resolve(file_path);
+
+        const isAllowed = ALLOWED_DIRS.some(allowedDir => resolvedPath.startsWith(path.resolve(allowedDir)));
+        if (!isAllowed) {
+          throw new Error(`file_path must be inside allowed directories: ${ALLOWED_DIRS.join(', ')}`);
+        }
+
+        const data = await fs.readFile(resolvedPath);
+          let pdfParse: any;
+          try {
+            const require = createRequire(import.meta.url);
+            pdfParse = require('pdf-parse');
+        } catch (e) {
+          throw new Error('Dependency "pdf-parse" is not installed. Please run `npm install pdf-parse` in pdftools-mcp');
+        }
+
+        const parsed: any = await pdfParse(data);
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: parsed.text || ''
             }
           ]
         };
