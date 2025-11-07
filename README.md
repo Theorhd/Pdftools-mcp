@@ -2,6 +2,10 @@
 
 A Model Context Protocol (MCP) server for PDF generation and manipulation. This server provides tools to generate PDF documents from HTML, text, and Markdown content.
 
+<a href="https://glama.ai/mcp/servers/@Theorhd/Pdftools-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@Theorhd/Pdftools-mcp/badge" alt="PDF-Tools Server MCP server" />
+</a>
+
 ## Features
 
 - **HTML to PDF**: Convert HTML content to PDF using Puppeteer
